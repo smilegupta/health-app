@@ -1,0 +1,8 @@
+{
+  "login": "Iniciar sesión",
+  "logout": "Cerrar sesión",
+  "add_caregiver": "Agregar cuidador",
+  "add_participant": "Agregar participante",
+  "start_recording": "Comenzar grabación",
+  "stop_recording": "Detener grabación"
+}

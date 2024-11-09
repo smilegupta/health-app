@@ -1,0 +1,8 @@
+{
+  "login": "Login",
+  "logout": "Logout",
+  "add_caregiver": "Add Caregiver",
+  "add_participant": "Add Participant",
+  "start_recording": "Start Recording",
+  "stop_recording": "Stop Recording"
+}
