@@ -4,5 +4,8 @@
   "add_caregiver": "Add Caregiver",
   "add_participant": "Add Participant",
   "start_recording": "Start Recording",
-  "stop_recording": "Stop Recording"
+  "stop_recording": "Stop Recording",
+  "welcome": "Welcome, {{name}}!",
+  "patients_assigned": "Patients Assigned",
+  "view_profile": "View Profile"
 }

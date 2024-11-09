@@ -31,8 +31,18 @@ export const LocalizationProvider = ({ children }) => {
     loadTranslations(locale); // Load translations on locale change
   }, [locale]);
 
-  const translate = (key) => {
-    return translations[key] || key; // Return key if translation is missing
+  const translate = (key, vars = {}) => {
+    let translation = translations[key] || key;
+
+    Object.keys(vars).forEach((varKey) => {
+      const placeholder = `{{${varKey}}}`;
+      translation = translation.replace(
+        new RegExp(placeholder, "g"),
+        vars[varKey]
+      );
+    });
+
+    return translation;
   };
 
   return (
