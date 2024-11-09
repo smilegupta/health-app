@@ -1,4 +1,4 @@
-import CaregiverHomePage from "src/pages/CaregiverHomePage";
+import CaregiverHomePage from "src/routes/CaregiverHomePage";
 
 function App() {
   return (

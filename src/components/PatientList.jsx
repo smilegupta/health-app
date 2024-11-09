@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 
 const PatientList = ({ patients }) => {
   return (
@@ -11,12 +12,14 @@ const PatientList = ({ patients }) => {
             className="py-3 border-b last:border-none flex justify-between items-center"
           >
             <span>{patient.name}</span>
-            <button
-              className="text-blue-500 hover:underline"
-              aria-label={`View profile of ${patient.name}`}
-            >
-              View Profile
-            </button>
+            <Link to={`/patient/${patient.id}`}>
+              <button
+                className="text-blue-500 hover:underline"
+                aria-label={`View profile of ${patient.name}`}
+              >
+                View Profile
+              </button>
+            </Link>
           </li>
         ))}
       </ul>

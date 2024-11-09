@@ -6,8 +6,8 @@ const CaregiverHomePage = () => {
   const { translate } = useLocalization();
 
   const patients = [
-    { id: 1, name: "John Doe" },
-    { id: 2, name: "Jane Smith" },
+    { id: "1", name: "John Doe" },
+    { id: "2", name: "Jane Smith" },
   ];
 
   return (
