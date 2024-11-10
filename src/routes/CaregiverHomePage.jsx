@@ -1,16 +1,23 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 import Header from "src/components/Header";
 import PatientList from "src/components/PatientList";
-import { useLocalization } from "src/contexts/Localization";
-import { useNavigate } from "react-router-dom";
 import { PlusIcon, ArrowLeftOnRectangleIcon } from "@heroicons/react/24/solid";
-import { useState, useEffect } from "react";
+
+import { useUser } from "src/contexts/UserContext";
+import { useLocalization } from "src/contexts/Localization";
+
 import { getPendingPatients } from "src/indexedDB";
+
+import { signOut } from "src/services/authService";
 
 const CaregiverHomePage = () => {
   const { translate } = useLocalization();
   const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [unsyncedPatients, setUnsyncedPatients] = useState([]);
+  const { setUser } = useUser();
 
   // Load patients from local storage
   useEffect(() => {
@@ -38,7 +45,15 @@ const CaregiverHomePage = () => {
     loadUnsyncedPatients();
   }, []);
 
-  const handleLogout = () => navigate("/login");
+  const handleLogout = () => {
+    try {
+      signOut();
+      setUser(null);
+      navigate("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
   const handleAddPatient = () => navigate("/patient/new");
 
   const handleDeletePatient = (patientId) => {

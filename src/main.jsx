@@ -1,14 +1,17 @@
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Amplify } from "aws-amplify";
+import awsconfig from "./aws-exports";
 
 // provider for localization
 import { LocalizationProvider } from "src/contexts/Localization.jsx";
-
-// config for routes
-import routes from "./routes/config";
+import { UserProvider } from "src/contexts/UserContext.jsx";
 
 // styles
 import "./index.css";
+
+// config for routes
+import routes from "./routes/config";
 
 const router = createBrowserRouter(
   routes.map((route) => ({
@@ -19,10 +22,15 @@ const router = createBrowserRouter(
 );
 
 createRoot(document.getElementById("root")).render(
-  <LocalizationProvider>
-    <RouterProvider router={router} />
-  </LocalizationProvider>
+  <UserProvider>
+    <LocalizationProvider>
+      <RouterProvider router={router} />
+    </LocalizationProvider>
+  </UserProvider>
 );
+
+// config for Amplify - which is used for authentication
+Amplify.configure(awsconfig);
 
 // Service Worker registration and event listeners
 if ("serviceWorker" in navigator) {

@@ -1,11 +1,18 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
+
+import { signIn } from "src/services/authService";
+import { useUser } from "src/contexts/UserContext";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState({ email: "", password: "" });
+  const { setUser } = useUser();
+  const navigate = useNavigate();
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -26,7 +33,7 @@ const LoginPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       setError({
@@ -35,8 +42,18 @@ const LoginPage = () => {
       });
       return;
     }
-    // Perform login logic here
-    console.log("Login successful:", { email, password });
+    e.preventDefault();
+    try {
+      const user = await signIn({
+        username: email,
+        password,
+      });
+      setUser(user.attributes);
+      navigate("/");
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError("Login failed. Check your username and password.");
+    }
   };
 
   return (
