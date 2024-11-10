@@ -17,7 +17,7 @@ const CaregiverHomePage = () => {
   const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [unsyncedPatients, setUnsyncedPatients] = useState([]);
-  const { setUser } = useUser();
+  const { user, setUser } = useUser();
 
   // Load patients from local storage
   useEffect(() => {
@@ -74,6 +74,11 @@ const CaregiverHomePage = () => {
       console.error("Error deleting patient:", error);
     }
   };
+
+  //todo: setup a protected route
+  if (!user) {
+    navigate("/login");
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
