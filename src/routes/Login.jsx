@@ -42,7 +42,6 @@ const LoginPage = () => {
       });
       return;
     }
-    e.preventDefault();
     try {
       const user = await signIn({
         username: email,
@@ -56,15 +55,44 @@ const LoginPage = () => {
     }
   };
 
+  // Functions for quick login buttons
+  const quickLogin = (email, password) => {
+    setEmail(email);
+    setPassword(password);
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+
+        {/* Quick login buttons */}
+        <div className="flex flex-col gap-3 mb-4">
+          <button
+            onClick={() => quickLogin("dallas@abc.com", "dallas@Caregiver1234")}
+            className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
+          >
+            Login as Admin 1 for Dallas Facility
+          </button>
+          <button
+            onClick={() =>
+              quickLogin("california@abc.com", "california@Caregiver123")
+            }
+            className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
+          >
+            Login as Admin 2 for California Facility
+          </button>
+          <button
+            onClick={() => quickLogin("jimmy@abc.com", "jimmy@Caregiver1234")}
+            className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
+          >
+            Login as Caregiver
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">
-              Email
-            </label>
+            <label className="block text-gray-700 font-medium mb-2">Email</label>
             <input
               type="email"
               value={email}
