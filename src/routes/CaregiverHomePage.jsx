@@ -24,7 +24,7 @@ const CaregiverHomePage = () => {
     const fetchPatients = async () => {
       try {
         const response = await fetch(
-          `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients?caregiverId=1`
+          `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients?caregiverId=${user.sub}`
         );
         const data = await response.json();
         setPatients(data);
@@ -55,25 +55,6 @@ const CaregiverHomePage = () => {
     }
   };
   const handleAddPatient = () => navigate("/patient/new");
-
-  const handleDeletePatient = (patientId) => {
-    try {
-      // Remove patient from the server
-      fetch(
-        `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${patientId}&caregiverId=1`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      // Remove patient from the local state
-      setPatients((prevPatients) =>
-        prevPatients.filter((patient) => patient.patientId !== patientId)
-      );
-    } catch (error) {
-      console.error("Error deleting patient:", error);
-    }
-  };
 
   //todo: setup a protected route
   if (!user) {
@@ -106,7 +87,7 @@ const CaregiverHomePage = () => {
             <p className="text-yellow-700 mb-4">
               {translate("unsynced_patients_description")}
             </p>
-            <PatientList patients={unsyncedPatients} isUnsynced />
+            <PatientList patients={unsyncedPatients} />
           </div>
         )}
 
@@ -140,7 +121,7 @@ const CaregiverHomePage = () => {
                 <PlusIcon className="h-5 w-5 mr-2" /> {translate("add_patient")}
               </button>
             </div>
-            <PatientList patients={patients} onDelete={handleDeletePatient} />
+            <PatientList patients={patients} />
           </>
         )}
       </main>

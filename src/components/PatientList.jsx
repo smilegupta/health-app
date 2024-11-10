@@ -1,10 +1,10 @@
 import PropTypes from "prop-types";
 import { useLocalization } from "src/contexts/Localization";
 
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { PencilIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 
-const PatientList = ({ patients, onDelete, isUnsynced = false }) => {
+const PatientList = ({ patients }) => {
   const { translate } = useLocalization();
   return (
     <div className="grid gap-4">
@@ -31,15 +31,6 @@ const PatientList = ({ patients, onDelete, isUnsynced = false }) => {
             >
               <PencilIcon className="h-5 w-5 mr-1" /> {translate("view_edit")}
             </Link>
-            {/* {!isUnsynced && (
-              <button
-                className="flex items-center bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition"
-                onClick={() => onDelete(patient.patientId)}
-                aria-label="Delete patient"
-              >
-                <TrashIcon className="h-5 w-5 mr-1" /> {translate("delete")}
-              </button>
-            )} */}
           </div>
         </div>
       ))}

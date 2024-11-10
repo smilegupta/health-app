@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
-
 import { signIn } from "src/services/authService";
 import { useUser } from "src/contexts/UserContext";
 
@@ -10,7 +8,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState({ email: "", password: "" });
+  const [error, setError] = useState({ email: "", password: "", general: "" });
   const { setUser } = useUser();
   const navigate = useNavigate();
 
@@ -27,14 +25,13 @@ const LoginPage = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     setError((prevError) => ({
       ...prevError,
-      email: emailRegex.test(email)
-        ? ""
-        : "Please enter a valid email address.",
+      email: emailRegex.test(email) ? "" : "Please enter a valid email address.",
     }));
   };
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    setError({ email: "", password: "", general: "" });
     if (!email || !password) {
       setError({
         email: !email ? "Email is required." : "",
@@ -43,54 +40,38 @@ const LoginPage = () => {
       return;
     }
     try {
-      const user = await signIn({
-        username: email,
-        password,
-      });
+      const user = await signIn({ username: email, password });
       setUser(user.attributes);
       navigate("/");
     } catch (err) {
       console.error("Login failed:", err);
-      setError("Login failed. Check your username and password.");
+      setError((prevError) => ({
+        ...prevError,
+        general: "Login failed. Check your username and password.",
+      }));
     }
   };
 
-  // Quick login with immediate sign-in
-  const quickLogin = (email, password) => {
-    setEmail(email);
-    setPassword(password);
-    setError({ email: "", password: "" }); // Clear any previous errors
-    handleSubmit(); // Directly invoke handleSubmit to log in immediately
+  // Quick login that directly invokes signIn without relying on state
+  const quickLogin = async (loginEmail, loginPassword) => {
+    setError({ email: "", password: "", general: "" }); // Clear previous errors
+    try {
+      const user = await signIn({ username: loginEmail, password: loginPassword });
+      setUser(user.attributes);
+      navigate("/");
+    } catch (err) {
+      console.error("Quick login failed:", err);
+      setError((prevError) => ({
+        ...prevError,
+        general: "Quick login failed. Check your username and password.",
+      }));
+    }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-
-        {/* Quick login buttons */}
-        <div className="flex flex-col gap-3 mb-4">
-          <button
-            onClick={() => quickLogin("dallas@abc.com", "dallas@Caregiver1234")}
-            className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
-          >
-           Login as Admin 1 for Dallas Facility
-          </button>
-          <button
-            onClick={() =>
-              quickLogin("california@abc.com", "california@Caregiver1234")
-            }
-            className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
-          >
-           Login as Admin 2 for California Facility
-          </button>
-          <button
-            onClick={() => quickLogin("sheldon@gmail.com", "sheldon@Caregiver1234")}
-            className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
-          >
-            Login as Caregiver
-          </button>
-        </div>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -108,9 +89,7 @@ const LoginPage = () => {
             )}
           </div>
           <div className="mb-4 relative">
-            <label className="block text-gray-700 font-medium mb-2">
-              Password
-            </label>
+            <label className="block text-gray-700 font-medium mb-2">Password</label>
             <input
               type={showPassword ? "text" : "password"}
               value={password}
@@ -137,11 +116,36 @@ const LoginPage = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition duration-200"
+            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
           >
             Login
           </button>
+          {error.general && (
+            <p className="text-red-500 text-sm mt-3 text-center">{error.general}</p>
+          )}
         </form>
+
+        {/* Quick login buttons */}
+        <div className="flex flex-col gap-3 mt-6">
+          <button
+            onClick={() => quickLogin("dallas@abc.com", "dallas@Caregiver1234")}
+            className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
+          >
+            Login as Admin 1 for Dallas Facility
+          </button>
+          <button
+            onClick={() => quickLogin("california@abc.com", "california@Caregiver1234")}
+            className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
+          >
+            Login as Admin 2 for California Facility
+          </button>
+          <button
+            onClick={() => quickLogin("sheldon@gmail.com", "sheldon@Caregiver1234")}
+            className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
+          >
+            Login as Caregiver
+          </button>
+        </div>
       </div>
     </div>
   );

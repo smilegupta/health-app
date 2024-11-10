@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import InputField from "./InputField";
 import RecordingControls from "./RecordingControls";
 import { blobToBase64 } from "src/utils/blobToBase64";
+import { useUser } from "src/contexts/UserContext";
 
 import { savePendingPatient } from "src/indexedDB";
 
@@ -23,6 +24,7 @@ const PatientForm = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunks = useRef([]);
   const base64Audio = useRef(null);
+  const { user } = useUser();
 
   const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN;
   const GITHUB_REPO = "smilegupta/test";
@@ -37,7 +39,7 @@ const PatientForm = () => {
   const loadPatientData = async () => {
     try {
       const response = await fetch(
-        `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${id}?caregiverId=1`
+        `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${id}?caregiverId=${user.sub}`
       );
       if (!response.ok) throw new Error("Failed to fetch patient");
       const data = await response.json();
@@ -109,7 +111,7 @@ const PatientForm = () => {
       : id;
     const patientData = {
       ...patient,
-      caregiverId: "1",
+      caregiverId: user.sub,
       avatar: `https://robohash.org/${generatedId}.png?size=200x200`,
     };
 
