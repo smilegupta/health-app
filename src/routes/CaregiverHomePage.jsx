@@ -16,21 +16,6 @@ const CaregiverHomePage = () => {
     const storedPatients = localStorage.getItem("patient-list");
     if (storedPatients) {
       setPatients(JSON.parse(storedPatients));
-    } else {
-      setPatients([
-        {
-          id: "1",
-          name: "John Doe",
-          age: 45,
-          photo: "https://robohash.org/1.png?size=200x200",
-        },
-        {
-          id: "2",
-          name: "Jane Smith",
-          age: 34,
-          photo: "https://robohash.org/2.png?size=200x200",
-        },
-      ]);
     }
   }, []);
 
@@ -70,16 +55,39 @@ const CaregiverHomePage = () => {
           </button>
         </div>
 
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-2xl font-semibold">Patient List</h3>
-          <button
-            onClick={handleAddPatient}
-            className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
-          >
-            <PlusIcon className="h-5 w-5 mr-2" /> {translate("add_patient")}
-          </button>
-        </div>
-        <PatientList patients={patients} onDelete={handleDeletePatient} />
+        {patients.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-6 mt-10 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-semibold text-gray-700 mb-2">
+                {translate("no_patients")}
+              </h3>
+              <p className="text-gray-500 mb-4">
+                {translate("no_patients_description") ||
+                  "No patient records available. Add new patients to manage their details."}
+              </p>
+            </div>
+            <button
+              onClick={handleAddPatient}
+              className="flex items-center bg-blue-500 text-white px-5 py-2 rounded-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+            >
+              <PlusIcon className="h-6 w-6 mr-2" />
+              {translate("add_patient")}
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-2xl font-semibold">Patient List</h3>
+              <button
+                onClick={handleAddPatient}
+                className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+              >
+                <PlusIcon className="h-5 w-5 mr-2" /> {translate("add_patient")}
+              </button>
+            </div>
+            <PatientList patients={patients} onDelete={handleDeletePatient} />
+          </>
+        )}
       </main>
     </div>
   );

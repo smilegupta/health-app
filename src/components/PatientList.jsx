@@ -13,14 +13,13 @@ const PatientList = ({ patients, onDelete }) => {
         >
           {/* Patient photo */}
           <img
-            src={patient.photo}
+            src={patient.avatar}
             alt={`${patient.name}'s avatar`}
             className="w-16 h-16 rounded-full mr-4"
           />
           {/* Patient details */}
           <div className="flex-grow">
             <h3 className="text-xl font-semibold">{patient.name}</h3>
-            <p className="text-gray-600">Age: {patient.age}</p>
           </div>
           {/* Action buttons */}
           <div className="flex space-x-2">
