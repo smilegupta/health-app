@@ -7,9 +7,14 @@ const PatientForm = () => {
   const [audioURL, setAudioURL] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState({ name: "", email: "" });
+  const [githubFileURL, setGithubFileURL] = useState(null);
 
   const mediaRecorderRef = useRef(null);
   const audioChunks = useRef([]);
+
+  const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN;
+  const GITHUB_REPO = "smilegupta/test";
+  const GITHUB_FILE_PATH = `recordings/${name}-${new Date().toISOString()}.mp3`;
 
   // Form field change handlers
   const handleNameChange = (e) => {
@@ -50,7 +55,7 @@ const PatientForm = () => {
       };
 
       // Event listener for when recording stops
-      mediaRecorderRef.current.onstop = () => {
+      mediaRecorderRef.current.onstop = async () => {
         const audioBlob = new Blob(audioChunks.current, { type: "audio/mpeg" });
 
         // this to create a URL for the audio file which can be used to play the audio
@@ -60,7 +65,8 @@ const PatientForm = () => {
 
         stream.getTracks().forEach((track) => track.stop());
 
-        //todo: Add logic to upload the audio file to a github
+        const base64Audio = await blobToBase64(audioBlob);
+        uploadToGitHub(base64Audio);
       };
 
       // Start recording
@@ -93,6 +99,45 @@ const PatientForm = () => {
 
     // Add logic to submit form data and audio URL
     console.log({ name, email, pastProblems, audioURL });
+  };
+
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  // Upload the file to GitHub
+  const uploadToGitHub = async (base64Audio) => {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+    const content = base64Audio;
+
+    try {
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: "Add audio recording",
+          content,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upload to GitHub");
+      }
+
+      const data = await response.json();
+      setGithubFileURL(data.content.html_url);
+      alert("Audio uploaded to GitHub!");
+    } catch (error) {
+      console.error("Error uploading to GitHub:", error);
+    }
   };
 
   return (
