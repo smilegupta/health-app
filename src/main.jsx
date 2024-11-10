@@ -24,7 +24,7 @@ createRoot(document.getElementById("root")).render(
   </LocalizationProvider>
 );
 
-// Service Worker registration and event listeners 
+// Service Worker registration and event listeners
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("message", (event) => {
     if (event.data && event.data.type === "UPDATE_LOCAL_STORAGE") {
