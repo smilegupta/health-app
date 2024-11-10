@@ -1,29 +1,46 @@
 import PropTypes from "prop-types";
+
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 
-const PatientList = ({ patients }) => {
+const PatientList = ({ patients, onDelete }) => {
   return (
-    <section className="bg-white p-6 rounded-lg shadow-md mt-6">
-      <h3 className="text-xl font-semibold mb-4">Patients Assigned</h3>
-      <ul>
-        {patients.map((patient) => (
-          <li
-            key={patient.id}
-            className="py-3 border-b last:border-none flex justify-between items-center"
-          >
-            <span>{patient.name}</span>
-            <Link to={`/patient/${patient.id}`}>
-              <button
-                className="text-blue-500 hover:underline"
-                aria-label={`View profile of ${patient.name}`}
-              >
-                View Profile
-              </button>
+    <div className="grid gap-4">
+      {patients.map((patient) => (
+        <div
+          key={patient.id}
+          className="flex items-center bg-white p-4 rounded-lg shadow-md"
+        >
+          {/* Patient photo */}
+          <img
+            src={patient.photo}
+            alt={`${patient.name}'s avatar`}
+            className="w-16 h-16 rounded-full mr-4"
+          />
+          {/* Patient details */}
+          <div className="flex-grow">
+            <h3 className="text-xl font-semibold">{patient.name}</h3>
+            <p className="text-gray-600">Age: {patient.age}</p>
+          </div>
+          {/* Action buttons */}
+          <div className="flex space-x-2">
+            <Link
+              to={`/patient/${patient.id}`}
+              className="flex items-center bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600 transition"
+            >
+              <PencilIcon className="h-5 w-5 mr-1" /> View/Edit
             </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
+            <button
+              className="flex items-center bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition"
+              onClick={() => onDelete(patient.id)}
+              aria-label="Delete patient"
+            >
+              <TrashIcon className="h-5 w-5 mr-1" /> Delete
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 };
 
@@ -36,4 +53,5 @@ PatientList.propTypes = {
       name: PropTypes.string.isRequired,
     })
   ).isRequired,
+  onDelete: PropTypes.func.isRequired,
 };
