@@ -1,7 +1,7 @@
 import { useLocalization } from "src/contexts/Localization";
 
 const LanguageSwitcher = () => {
-  const { setLocale } = useLocalization();
+  const { setLocale, locale } = useLocalization();
 
   return (
     <div className="relative">
@@ -9,6 +9,7 @@ const LanguageSwitcher = () => {
         onChange={(e) => setLocale(e.target.value)}
         className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md focus:outline-none appearance-none focus:ring-2 focus:ring-white hover:bg-blue-400 pr-8"
         aria-label="Language Selector"
+        value={locale}
       >
         <option value="en">English</option>
         <option value="es">Español</option>

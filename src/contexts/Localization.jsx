@@ -31,6 +31,19 @@ export const LocalizationProvider = ({ children }) => {
     loadTranslations(locale); // Load translations on locale change
   }, [locale]);
 
+  useEffect(() => {
+    const storedLocale = localStorage.getItem("locale") || "en";
+    if (storedLocale) {
+      setLocale(storedLocale);
+    }
+  }, []);
+
+  function setLocaleFn(selectedLocale) {
+    localStorage.setItem("locale", selectedLocale);
+    loadTranslations(selectedLocale);
+    setLocale(selectedLocale);
+  }
+
   const translate = (key, vars = {}) => {
     let translation = translations[key] || key;
 
@@ -46,7 +59,9 @@ export const LocalizationProvider = ({ children }) => {
   };
 
   return (
-    <LocalizationContext.Provider value={{ locale, setLocale, translate }}>
+    <LocalizationContext.Provider
+      value={{ locale, setLocale: setLocaleFn, translate }}
+    >
       {children}
     </LocalizationContext.Provider>
   );
