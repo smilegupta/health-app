@@ -13,5 +13,7 @@
   "no_patients": "No Patients",
   "patient_list": "Patient List",
   "view_edit": "View/Edit",
-  "delete": "Delete"
+  "delete": "Delete",
+  "unsynced_patients": "Unsynced Patients",
+  "unsynced_patients_description": "You have unsynced patients data. It will be automatically synced when you are online."
 }

@@ -13,5 +13,7 @@
   "no_patients": "Sin Pacientes",
   "patient_list": "Lista de Pacientes",
   "view_edit": "Ver/Editar",
-  "delete": "Eliminar"
+  "delete": "Eliminar",
+  "unsynced_patients": "Pacientes no sincronizados",
+  "unsynced_patients_description": "Tienes datos de pacientes no sincronizados. Se sincronizarán automáticamente cuando estés en línea."
 }
