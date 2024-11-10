@@ -1,6 +1,7 @@
 import ErrorPage from "./ErrorPage";
 import CaregiverHomePage from "./CaregiverHomePage";
 import PatientDetails from "./PatientDetails";
+import LoginPage from "./Login";
 
 const routes = [
   {
@@ -11,6 +12,11 @@ const routes = [
   {
     path: "/patient/:id",
     component: PatientDetails,
+    errorComponent: ErrorPage,
+  },
+  {
+    path: "/login",
+    component: LoginPage,
     errorComponent: ErrorPage,
   },
 ];
