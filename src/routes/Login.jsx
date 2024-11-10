@@ -34,7 +34,7 @@ const LoginPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!email || !password) {
       setError({
         email: !email ? "Email is required." : "",
@@ -55,10 +55,12 @@ const LoginPage = () => {
     }
   };
 
-  // Functions for quick login buttons
+  // Quick login with immediate sign-in
   const quickLogin = (email, password) => {
     setEmail(email);
     setPassword(password);
+    setError({ email: "", password: "" }); // Clear any previous errors
+    handleSubmit(); // Directly invoke handleSubmit to log in immediately
   };
 
   return (
@@ -72,18 +74,18 @@ const LoginPage = () => {
             onClick={() => quickLogin("dallas@abc.com", "dallas@Caregiver1234")}
             className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
           >
-            Login as Admin 1 for Dallas Facility
+           Login as Admin 1 for Dallas Facility
           </button>
           <button
             onClick={() =>
-              quickLogin("california@abc.com", "california@Caregiver123")
+              quickLogin("california@abc.com", "california@Caregiver1234")
             }
             className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
           >
-            Login as Admin 2 for California Facility
+           Login as Admin 2 for California Facility
           </button>
           <button
-            onClick={() => quickLogin("jimmy@abc.com", "jimmy@Caregiver1234")}
+            onClick={() => quickLogin("sheldon@gmail.com", "sheldon@Caregiver1234")}
             className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
           >
             Login as Caregiver

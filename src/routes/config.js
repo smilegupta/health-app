@@ -1,12 +1,13 @@
 import ErrorPage from "./ErrorPage";
-import CaregiverHomePage from "./CaregiverHomePage";
+import App from "../App";
 import PatientDetails from "./PatientDetails";
 import LoginPage from "./Login";
+import AddCaregiverForm from "src/components/AddCaregiverForm";
 
 const routes = [
   {
     path: "/",
-    component: CaregiverHomePage,
+    component: App,
     errorComponent: ErrorPage,
   },
   {
@@ -17,6 +18,11 @@ const routes = [
   {
     path: "/login",
     component: LoginPage,
+    errorComponent: ErrorPage,
+  },
+  {
+    path: "/caregiver/new",
+    component: AddCaregiverForm,
     errorComponent: ErrorPage,
   },
 ];
