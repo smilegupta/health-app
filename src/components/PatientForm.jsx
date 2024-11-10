@@ -21,19 +21,28 @@ const PatientForm = () => {
   const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN;
   const GITHUB_REPO = "smilegupta/test";
   const GITHUB_FILE_PATH = `recordings/${name}-${new Date().toISOString()}.mp3`;
+  const originalPatientData = useRef({});
 
   // Prefill data if editing an existing patient
   useEffect(() => {
-    if (!isNew) {
-      const storedPatients =
-        JSON.parse(localStorage.getItem("patient-list")) || [];
-      const patientData = storedPatients.find((patient) => patient.id === id);
-      if (patientData) {
-        setName(patientData.name || "");
-        setEmail(patientData.email || "");
-        setPastProblems(patientData.pastProblems || "");
-        setAudioRecordings(patientData.audioRecordings || []);
+    const fetchPatient = async () => {
+      try {
+        const response = await fetch(
+          `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${id}?caregiverId=1`
+        );
+        if (!response.ok) throw new Error("Failed to fetch patient");
+        originalPatientData.current = await response.json();
+        setName(originalPatientData.current.name || "");
+        setEmail(originalPatientData.current.email || "");
+        setPastProblems(originalPatientData.current.pastProblems || "");
+        setAudioRecordings(originalPatientData.current.recordings || []);
+      } catch (error) {
+        console.error("Error fetching patient:", error);
       }
+    };
+
+    if (!isNew) {
+      fetchPatient();
     }
   }, [id, isNew]);
 
@@ -119,12 +128,12 @@ const PatientForm = () => {
 
       // Construct patient data for online submission
       const patientData = {
-        id: generatedId,
+        caregiverId: "1",
         name,
         email,
         pastProblems,
         avatar: `https://robohash.org/${generatedId}.png?size=200x200`,
-        audioRecordings: githubFileURL
+        recordings: githubFileURL
           ? [
               ...audioRecordings,
               {
@@ -137,14 +146,43 @@ const PatientForm = () => {
       };
 
       // Update LocalStorage (for now) as a placeholder for your API call
-      const storedPatients =
-        JSON.parse(localStorage.getItem("patient-list")) || [];
-      const updatedPatients = isNew
-        ? [...storedPatients, patientData]
-        : storedPatients.map((patient) =>
-            patient.id === id ? patientData : patient
+      if (isNew) {
+        try {
+          const response = await fetch(
+            "https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(patientData),
+            }
           );
-      localStorage.setItem("patient-list", JSON.stringify(updatedPatients));
+          if (!response.ok) throw new Error("Failed to add patient");
+          const data = await response.json();
+          console.log(data);
+        } catch (error) {
+          console.error("Error adding patient:", error);
+        }
+      } else {
+        try {
+          const response = await fetch(
+            `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${id}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(patientData),
+            }
+          );
+          if (!response.ok) throw new Error("Failed to update patient");
+          const data = await response.json();
+          console.log(data);
+        } catch (error) {
+          console.error("Error updating patient:", error);
+        }
+      }
     } else {
       // If offline, store base64 audio and mark for later sync
       const patientData = {
@@ -153,7 +191,7 @@ const PatientForm = () => {
         email,
         pastProblems,
         avatar: `https://robohash.org/${generatedId}.png?size=200x200`,
-        audioRecordings: [
+        recordings: [
           ...audioRecordings,
           {
             url: base64Audio.current,
@@ -236,6 +274,7 @@ const PatientForm = () => {
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter patient's email"
               required
+              readOnly={!isNew}
             />
             {error.email && (
               <p className="text-red-500 text-sm mt-1">{error.email}</p>

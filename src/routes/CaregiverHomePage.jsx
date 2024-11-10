@@ -14,10 +14,19 @@ const CaregiverHomePage = () => {
 
   // Load patients from local storage
   useEffect(() => {
-    const storedPatients = localStorage.getItem("patient-list");
-    if (storedPatients) {
-      setPatients(JSON.parse(storedPatients));
-    }
+    const fetchPatients = async () => {
+      try {
+        const response = await fetch(
+          `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients?caregiverId=1`
+        );
+        const data = await response.json();
+        setPatients(data);
+      } catch (error) {
+        console.error("Error fetching patient:", error);
+      }
+    };
+
+    fetchPatients();
   }, []);
 
   // Load unsynced patients from IndexedDB
@@ -33,11 +42,22 @@ const CaregiverHomePage = () => {
   const handleAddPatient = () => navigate("/patient/new");
 
   const handleDeletePatient = (patientId) => {
-    const updatedPatients = patients.filter(
-      (patient) => patient.id !== patientId
-    );
-    setPatients(updatedPatients);
-    localStorage.setItem("patient-list", JSON.stringify(updatedPatients));
+    try {
+      // Remove patient from the server
+      fetch(
+        `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${patientId}&caregiverId=1`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      // Remove patient from the local state
+      setPatients((prevPatients) =>
+        prevPatients.filter((patient) => patient.patientId !== patientId)
+      );
+    } catch (error) {
+      console.error("Error deleting patient:", error);
+    }
   };
 
   return (

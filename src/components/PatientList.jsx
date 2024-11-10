@@ -4,13 +4,13 @@ import { useLocalization } from "src/contexts/Localization";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 
-const PatientList = ({ patients, onDelete }) => {
+const PatientList = ({ patients, onDelete, isUnsynced = false }) => {
   const { translate } = useLocalization();
   return (
     <div className="grid gap-4">
       {patients.map((patient) => (
         <div
-          key={patient.id}
+          key={patient.patientId}
           className="flex items-center bg-white p-4 rounded-lg shadow-md"
         >
           {/* Patient photo */}
@@ -26,18 +26,20 @@ const PatientList = ({ patients, onDelete }) => {
           {/* Action buttons */}
           <div className="flex space-x-2">
             <Link
-              to={`/patient/${patient.id}`}
+              to={`/patient/${patient.patientId}`}
               className="flex items-center bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600 transition"
             >
               <PencilIcon className="h-5 w-5 mr-1" /> {translate("view_edit")}
             </Link>
-            <button
-              className="flex items-center bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition"
-              onClick={() => onDelete(patient.id)}
-              aria-label="Delete patient"
-            >
-              <TrashIcon className="h-5 w-5 mr-1" /> {translate("delete")}
-            </button>
+            {!isUnsynced && (
+              <button
+                className="flex items-center bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition"
+                onClick={() => onDelete(patient.patientId)}
+                aria-label="Delete patient"
+              >
+                <TrashIcon className="h-5 w-5 mr-1" /> {translate("delete")}
+              </button>
+            )}
           </div>
         </div>
       ))}
@@ -50,9 +52,10 @@ export default PatientList;
 PatientList.propTypes = {
   patients: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.string.isRequired,
+      patientId: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
     })
   ).isRequired,
   onDelete: PropTypes.func.isRequired,
+  isUnsynced: PropTypes.bool,
 };
