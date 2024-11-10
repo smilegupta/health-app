@@ -7,5 +7,11 @@
   "stop_recording": "Detener grabación",
   "welcome": "¡Bienvenido, {{name}}!",
   "patients_assigned": "Pacientes Asignados",
-  "view_profile": "Ver Perfil"
+  "view_profile": "Ver Perfil",
+  "add_patient": "Agregar Paciente",
+  "no_patients_description": "No tienes pacientes asignados. Para agregar un paciente, haz clic en el botón de abajo.",
+  "no_patients": "Sin Pacientes",
+  "patient_list": "Lista de Pacientes",
+  "view_edit": "Ver/Editar",
+  "delete": "Eliminar"
 }

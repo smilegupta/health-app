@@ -7,5 +7,11 @@
   "stop_recording": "Stop Recording",
   "welcome": "Welcome, {{name}}!",
   "patients_assigned": "Patients Assigned",
-  "view_profile": "View Profile"
+  "view_profile": "View Profile",
+  "add_patient": "Add Patient",
+  "no_patients_description": "You have no patients assigned to you. To add a patient, click the button below.",
+  "no_patients": "No Patients",
+  "patient_list": "Patient List",
+  "view_edit": "View/Edit",
+  "delete": "Delete"
 }
