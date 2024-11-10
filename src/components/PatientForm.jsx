@@ -1,242 +1,186 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import InputField from "./InputField";
+import RecordingControls from "./RecordingControls";
+import { blobToBase64 } from "src/utils/blobToBase64";
+
 import { savePendingPatient } from "src/indexedDB";
 
 const PatientForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  // Check if we're adding a new patient
   const isNew = id === "new";
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [pastProblems, setPastProblems] = useState("");
-  const [audioRecordings, setAudioRecordings] = useState([]);
+
+  const [patient, setPatient] = useState({
+    name: "",
+    email: "",
+    pastProblems: "",
+    recordings: [],
+  });
   const [audioURL, setAudioURL] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-  const [error, setError] = useState({ name: "", email: "" });
+  const [errors, setErrors] = useState({});
   const mediaRecorderRef = useRef(null);
   const audioChunks = useRef([]);
   const base64Audio = useRef(null);
+
   const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN;
   const GITHUB_REPO = "smilegupta/test";
-  const GITHUB_FILE_PATH = `recordings/${name}-${new Date().toISOString()}.mp3`;
-  const originalPatientData = useRef({});
+  const GITHUB_FILE_PATH = `recordings/${
+    patient.name
+  }-${new Date().toISOString()}.mp3`;
 
-  // Prefill data if editing an existing patient
   useEffect(() => {
-    const fetchPatient = async () => {
-      try {
-        const response = await fetch(
-          `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${id}?caregiverId=1`
-        );
-        if (!response.ok) throw new Error("Failed to fetch patient");
-        originalPatientData.current = await response.json();
-        setName(originalPatientData.current.name || "");
-        setEmail(originalPatientData.current.email || "");
-        setPastProblems(originalPatientData.current.pastProblems || "");
-        setAudioRecordings(originalPatientData.current.recordings || []);
-      } catch (error) {
-        console.error("Error fetching patient:", error);
-      }
-    };
-
-    if (!isNew) {
-      fetchPatient();
-    }
+    if (!isNew) loadPatientData();
   }, [id, isNew]);
 
-  const handleNameChange = (e) => {
-    setName(e.target.value);
-    setError((prev) => ({
-      ...prev,
-      name: e.target.value ? "" : "Name is required.",
-    }));
-  };
-
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    setError((prev) => ({
-      ...prev,
-      email: emailRegex.test(e.target.value)
-        ? ""
-        : "Enter a valid email address.",
-    }));
-  };
-
-  const startRecording = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("Your browser doesn't support audio recording.");
-      return;
-    }
-    setIsRecording(true);
+  const loadPatientData = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        audioChunks.current.push(event.data);
-      };
-      mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunks.current, { type: "audio/mpeg" });
-
-        // this to create a URL for the audio file which can be used to play the audio
-        const audioURL = URL.createObjectURL(audioBlob);
-        setAudioURL(audioURL);
-        audioChunks.current = [];
-        stream.getTracks().forEach((track) => track.stop());
-        base64Audio.current = await blobToBase64(audioBlob);
-      };
-      // Start recording
-      mediaRecorderRef.current.start();
+      const response = await fetch(
+        `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${id}?caregiverId=1`
+      );
+      if (!response.ok) throw new Error("Failed to fetch patient");
+      const data = await response.json();
+      setPatient((prev) => ({ ...prev, ...data }));
     } catch (error) {
-      console.error("Error accessing audio stream:", error);
-      setIsRecording(false);
+      console.error("Error fetching patient:", error);
     }
   };
 
-  const stopRecording = () => {
-    setIsRecording(false);
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !== "inactive"
-    ) {
-      mediaRecorderRef.current.stop();
+  const handleInputChange = (field, value) => {
+    setPatient((prev) => ({ ...prev, [field]: value }));
+    if (field === "name" || field === "email") validateField(field, value);
+  };
+
+  const validateField = (field, value) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const errorMessages = {
+      name: "Name is required.",
+      email: "Enter a valid email address.",
+    };
+
+    setErrors((prev) => ({
+      ...prev,
+      [field]:
+        field === "email" && !emailRegex.test(value)
+          ? errorMessages.email
+          : field === "name" && !value
+          ? errorMessages.name
+          : "",
+    }));
+  };
+
+  const handleRecording = async (start = true) => {
+    if (start) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        setIsRecording(true);
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current.ondataavailable = (event) => {
+          audioChunks.current.push(event.data);
+        };
+        mediaRecorderRef.current.onstop = async () => {
+          const audioBlob = new Blob(audioChunks.current, {
+            type: "audio/mpeg",
+          });
+          setAudioURL(URL.createObjectURL(audioBlob));
+          base64Audio.current = await blobToBase64(audioBlob);
+          audioChunks.current = [];
+          stream.getTracks().forEach((track) => track.stop());
+        };
+        mediaRecorderRef.current.start();
+      } catch (error) {
+        console.error("Error accessing audio stream:", error);
+      }
+    } else {
+      setIsRecording(false);
+      mediaRecorderRef.current?.stop();
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !email) {
-      setError({
-        name: !name ? "Name is required." : "",
-        email: !email ? "Email is required." : "",
-      });
-      return;
-    }
+    if (errors.name || errors.email) return;
 
     const generatedId = isNew
       ? Math.round(Math.random() * 1000).toString()
       : id;
-    let githubFileURL = "";
+    const patientData = {
+      ...patient,
+      caregiverId: "1",
+      avatar: `https://robohash.org/${generatedId}.png?size=200x200`,
+    };
 
     if (navigator.onLine) {
-      // If online, upload the audio to GitHub and update patient-list in LocalStorage (for now)
-      if (audioURL) {
-        githubFileURL = await uploadToGitHub(base64Audio.current);
-      }
-
-      // Construct patient data for online submission
-      const patientData = {
-        caregiverId: "1",
-        name,
-        email,
-        pastProblems,
-        avatar: `https://robohash.org/${generatedId}.png?size=200x200`,
-        recordings: githubFileURL
-          ? [
-              ...audioRecordings,
-              {
-                url: githubFileURL,
-                time: new Date().toISOString(),
-                isBase64: false, // Not base64, as it's already uploaded
-              },
-            ]
-          : audioRecordings,
-      };
-
-      // Update LocalStorage (for now) as a placeholder for your API call
-      if (isNew) {
-        try {
-          const response = await fetch(
-            "https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(patientData),
-            }
-          );
-          if (!response.ok) throw new Error("Failed to add patient");
-          const data = await response.json();
-          console.log(data);
-        } catch (error) {
-          console.error("Error adding patient:", error);
-        }
-      } else {
-        try {
-          const response = await fetch(
-            `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${id}`,
-            {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(patientData),
-            }
-          );
-          if (!response.ok) throw new Error("Failed to update patient");
-          const data = await response.json();
-          console.log(data);
-        } catch (error) {
-          console.error("Error updating patient:", error);
-        }
-      }
+      patientData.recordings = await uploadRecording(
+        audioURL,
+        patientData.recordings
+      );
+      await savePatientData(isNew ? "POST" : "PUT", patientData);
     } else {
-      // If offline, store base64 audio and mark for later sync
-      const patientData = {
-        id: generatedId,
-        name,
-        email,
-        pastProblems,
-        avatar: `https://robohash.org/${generatedId}.png?size=200x200`,
-        recordings: [
-          ...audioRecordings,
-          {
-            url: base64Audio.current,
-            time: new Date().toISOString(),
-            isBase64: true, // Indicates that this is a base64 string to upload later
-          },
-        ],
-      };
-
-      // Save to pending patients in IndexDB for syncing later
-      await savePendingPatient(patientData);
+      await savePendingPatient({ ...patientData, id: generatedId });
       alert("Data saved offline and will sync when online.");
     }
 
     navigate("/");
   };
 
-  const blobToBase64 = (blob) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+  const uploadRecording = async (audioURL, recordings) => {
+    if (audioURL) {
+      try {
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+        const response = await fetch(url, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${GITHUB_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: "Add audio recording",
+            content: base64Audio.current,
+          }),
+        });
+        if (!response.ok) throw new Error("Failed to upload to GitHub");
+        const data = await response.json();
+        return [
+          ...recordings,
+          {
+            url: data.content.html_url,
+            time: new Date().toISOString(),
+            isBase64: false,
+          },
+        ];
+      } catch (error) {
+        console.error("Error uploading to GitHub:", error);
+      }
+    }
+    return recordings;
   };
 
-  const uploadToGitHub = async (base64Audio) => {
-    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+  const savePatientData = async (method, data) => {
+    const url = `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients${
+      isNew ? "" : `/${id}`
+    }`;
+
+    let formattedData = { ...data };
+
+    if (!isNew) {
+      // remove patientId
+      delete formattedData.patientId;
+    }
+
     try {
       const response = await fetch(url, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: "Add audio recording",
-          content: base64Audio,
-        }),
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formattedData),
       });
-      if (!response.ok) throw new Error("Failed to upload to GitHub");
-      const data = await response.json();
-      return data.content.html_url;
+      if (!response.ok) throw new Error("Failed to save patient data");
+      await response.json();
     } catch (error) {
-      console.error("Error uploading to GitHub:", error);
+      console.error(`Error ${isNew ? "adding" : "updating"} patient:`, error);
     }
   };
 
@@ -247,105 +191,27 @@ const PatientForm = () => {
           {isNew ? "Add New Patient" : "Edit Patient"}
         </h2>
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">
-              Patient Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={handleNameChange}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter patient's name"
-              required
+          {["name", "email", "pastProblems"].map((field, index) => (
+            <InputField
+              key={index}
+              label={`Patient ${
+                field.charAt(0).toUpperCase() + field.slice(1)
+              }`}
+              type={field === "email" ? "email" : "text"}
+              value={patient[field]}
+              onChange={(e) => handleInputChange(field, e.target.value)}
+              error={errors[field]}
+              isTextArea={field === "pastProblems"}
+              readOnly={!isNew && field === "email"}
             />
-            {error.name && (
-              <p className="text-red-500 text-sm mt-1">{error.name}</p>
-            )}
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">
-              Patient Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={handleEmailChange}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter patient's email"
-              required
-              readOnly={!isNew}
-            />
-            {error.email && (
-              <p className="text-red-500 text-sm mt-1">{error.email}</p>
-            )}
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">
-              Patient Past Problems
-            </label>
-            <textarea
-              value={pastProblems}
-              onChange={(e) => setPastProblems(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Describe any past problems"
-              rows="4"
-            ></textarea>
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">
-              Recorded Observations
-            </label>
-            <div className="flex items-center space-x-3">
-              <button
-                type="button"
-                onClick={isRecording ? stopRecording : startRecording}
-                className={`px-4 py-2 rounded-md text-white ${
-                  isRecording
-                    ? "bg-red-500 hover:bg-red-600"
-                    : "bg-blue-500 hover:bg-blue-600"
-                } transition duration-200`}
-              >
-                {isRecording ? "Stop Recording" : "Start Recording"}
-              </button>
-              {audioURL && (
-                <audio
-                  controls
-                  src={audioURL}
-                  className="ml-4 mt-2 w-full max-w-xs"
-                >
-                  Your browser does not support the audio element.
-                </audio>
-              )}
-            </div>
-            {audioRecordings.length > 0 && (
-              <div className="mt-4">
-                <h4 className="text-gray-700 font-medium mb-2">
-                  Previous Recordings:
-                </h4>
-                <ul className="space-y-2">
-                  {audioRecordings.map((recording, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center space-x-3 bg-gray-50 p-2 rounded-md shadow-sm"
-                    >
-                      <span className="text-sm text-gray-500">
-                        {new Date(recording.time).toLocaleString()} -{" "}
-                        <a
-                          href={recording.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-500 hover:underline"
-                        >
-                          View Recording
-                        </a>
-                      </span>{" "}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          ))}
+          <RecordingControls
+            isRecording={isRecording}
+            audioURL={audioURL}
+            onStart={() => handleRecording(true)}
+            onStop={() => handleRecording(false)}
+            recordings={patient.recordings}
+          />
           <button
             type="submit"
             className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition duration-200"
