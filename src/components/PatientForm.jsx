@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { savePendingPatient } from "src/indexedDB";
 
 const PatientForm = () => {
   const { id } = useParams();
@@ -105,37 +106,67 @@ const PatientForm = () => {
       return;
     }
 
+    const generatedId = isNew
+      ? Math.round(Math.random() * 1000).toString()
+      : id;
     let githubFileURL = "";
-    if (audioURL) {
-      githubFileURL = await uploadToGitHub(base64Audio.current);
+
+    if (navigator.onLine) {
+      // If online, upload the audio to GitHub and update patient-list in LocalStorage (for now)
+      if (audioURL) {
+        githubFileURL = await uploadToGitHub(base64Audio.current);
+      }
+
+      // Construct patient data for online submission
+      const patientData = {
+        id: generatedId,
+        name,
+        email,
+        pastProblems,
+        avatar: `https://robohash.org/${generatedId}.png?size=200x200`,
+        audioRecordings: githubFileURL
+          ? [
+              ...audioRecordings,
+              {
+                url: githubFileURL,
+                time: new Date().toISOString(),
+                isBase64: false, // Not base64, as it's already uploaded
+              },
+            ]
+          : audioRecordings,
+      };
+
+      // Update LocalStorage (for now) as a placeholder for your API call
+      const storedPatients =
+        JSON.parse(localStorage.getItem("patient-list")) || [];
+      const updatedPatients = isNew
+        ? [...storedPatients, patientData]
+        : storedPatients.map((patient) =>
+            patient.id === id ? patientData : patient
+          );
+      localStorage.setItem("patient-list", JSON.stringify(updatedPatients));
+    } else {
+      // If offline, store base64 audio and mark for later sync
+      const patientData = {
+        id: generatedId,
+        name,
+        email,
+        pastProblems,
+        avatar: `https://robohash.org/${generatedId}.png?size=200x200`,
+        audioRecordings: [
+          ...audioRecordings,
+          {
+            url: base64Audio.current,
+            time: new Date().toISOString(),
+            isBase64: true, // Indicates that this is a base64 string to upload later
+          },
+        ],
+      };
+
+      // Save to pending patients in IndexDB for syncing later
+      await savePendingPatient(patientData);
+      alert("Data saved offline and will sync when online.");
     }
-
-    const generatedId = Math.round(Math.random() * 1000).toString();
-
-    const patientData = {
-      id: isNew ? generatedId : id,
-      name,
-      email,
-      pastProblems,
-      avatar: `https://robohash.org/${
-        isNew ? generatedId : id
-      }.png?size=200x200`,
-      audioRecordings: githubFileURL
-        ? [
-            ...audioRecordings,
-            { url: githubFileURL, time: new Date().toISOString() },
-          ]
-        : audioRecordings,
-    };
-
-    const storedPatients =
-      JSON.parse(localStorage.getItem("patient-list")) || [];
-    const updatedPatients = isNew
-      ? [...storedPatients, patientData]
-      : storedPatients.map((patient) =>
-          patient.id === id ? patientData : patient
-        );
-    localStorage.setItem("patient-list", JSON.stringify(updatedPatients));
 
     navigate("/");
   };
