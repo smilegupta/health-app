@@ -52,36 +52,51 @@ self.addEventListener("sync", async (event) => {
 // Sync function to process and upload pending patients data
 const syncPendingPatients = async () => {
   const pendingPatients = await getPendingPatients();
-
-  for (const patientData of pendingPatients) {
-    for (const recording of patientData.audioRecordings) {
-      if (recording.isBase64) {
-        try {
-          // Upload the base64 audio to GitHub and update the recording URL
-          const githubFileURL = await uploadToGitHub(
-            patientData.name,
-            recording.url
-          );
-          recording.url = githubFileURL;
-          recording.isBase64 = false;
-        } catch (error) {
-          console.error("Failed to upload recording to GitHub:", error);
-          return; // Exit if upload fails, will retry on next sync
+  try {
+    for (const patientData of pendingPatients) {
+      for (const recording of patientData.audioRecordings) {
+        if (recording.isBase64) {
+          try {
+            // Upload the base64 audio to GitHub and update the recording URL
+            const githubFileURL = await uploadToGitHub(
+              patientData.name,
+              recording.url
+            );
+            recording.url = githubFileURL;
+            recording.isBase64 = false;
+          } catch (error) {
+            console.error("Failed to upload recording to GitHub:", error);
+            return; // Exit if upload fails, will retry on next sync
+          }
         }
       }
+
+      // api integration
+      const url = `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${patientData.patientId}`;
+
+      const formattedData = { ...patientData };
+      delete formattedData.id;
+
+      try {
+        const response = await fetch(url, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formattedData),
+        });
+        if (!response.ok) throw new Error("Failed to save patient data");
+        await response.json();
+      } catch (error) {
+        console.error("Error updating patient data:", error);
+        return;
+      }
+
+      // Delete from IndexedDB after syncing
+      await deletePendingPatient(patientData.id);
     }
 
-    // Send updated patient data to main thread to store in LocalStorage
-    const clients = await self.clients.matchAll();
-    clients.forEach((client) => {
-      client.postMessage({
-        type: "UPDATE_LOCAL_STORAGE",
-        patientData,
-      });
-    });
-
-    // Delete from IndexedDB after syncing
-    await deletePendingPatient(patientData.id);
+    alert("Data synced successfully, refresh the page to see the changes.");
+  } catch (error) {
+    console.error("Error syncing pending patients:", error);
   }
 };
 
