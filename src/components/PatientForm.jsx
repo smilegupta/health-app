@@ -125,6 +125,10 @@ const PatientForm = () => {
       );
       await savePatientData(isNew ? "POST" : "PUT", patientData);
     } else {
+      patientData.recordings = [
+        ...patientData.recordings,
+        { url: audioURL, time: new Date().toISOString(), isBase64: true },
+      ];
       await savePendingPatient({ ...patientData, id: generatedId });
       alert(translate("patient_offline"));
     }
@@ -175,6 +179,16 @@ const PatientForm = () => {
       // remove patientId
       delete formattedData.patientId;
     }
+
+    // add recordings
+    formattedData.recordings = [
+      ...patient.recordings,
+      {
+        url: audioURL,
+        time: new Date().toISOString(),
+        isBase64: true,
+      },
+    ];
 
     try {
       const response = await fetch(url, {

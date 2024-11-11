@@ -21,7 +21,7 @@ const AddCaregiverForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const errorMessages = {
       name: translate("name_required"),
-      email: translate("valid_email_required"),
+      email: translate("valid_email"),
     };
 
     setErrors((prev) => ({

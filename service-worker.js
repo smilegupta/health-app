@@ -61,7 +61,7 @@ const syncPendingPatients = async () => {
     for (const patientData of pendingPatients) {
       for (const recording of patientData.recordings) {
         if (recording.isBase64) {
-          const fileName = patientData.name.relace(" ", "-");
+          const fileName = patientData.name.replace(" ", "-") || "";
           try {
             // Upload the base64 audio to GitHub and update the recording URL
             const githubFileURL = await uploadToGitHub(fileName, recording.url);
