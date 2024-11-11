@@ -11,7 +11,7 @@ self.addEventListener("message", (event) => {
 // IndexedDB functions to interact with pending-patients store
 const openDatabase = () => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open("myAppDB", 1);
+    const request = indexedDB.open("myAppDB", 2);
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
       if (!db.objectStoreNames.contains("pending-patients")) {

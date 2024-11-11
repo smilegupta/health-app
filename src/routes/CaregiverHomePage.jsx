@@ -8,8 +8,12 @@ import { PlusIcon, ArrowLeftOnRectangleIcon } from "@heroicons/react/24/solid";
 import { useUser } from "src/contexts/UserContext";
 import { useLocalization } from "src/contexts/Localization";
 
-import { getPendingPatients } from "src/indexedDB";
-
+import {
+  getPendingPatients,
+  saveCachedPatients,
+  getCachedPatients,
+  clearCachedPatients,
+} from "src/indexedDB";
 import { signOut } from "src/services/authService";
 
 const CaregiverHomePage = () => {
@@ -19,18 +23,40 @@ const CaregiverHomePage = () => {
   const [unsyncedPatients, setUnsyncedPatients] = useState([]);
   const { user, setUser } = useUser();
 
-  // Load patients from local storage
+  // Fetch patients from API with IndexedDB fallback
   useEffect(() => {
     if (!user) return;
+
     const fetchPatients = async () => {
+      if (!navigator.onLine) {
+        const cachedData = await getCachedPatients();
+        if (cachedData.length > 0) {
+          setPatients(cachedData);
+        }
+        return;
+      }
+
       try {
         const response = await fetch(
           `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients?caregiverId=${user?.sub}`
         );
+        if (!response.ok) throw new Error("Network response was not ok");
+
         const data = await response.json();
         setPatients(data);
+
+        // Clear the old cached data and save the new data
+        await clearCachedPatients();
+        await saveCachedPatients(data);
       } catch (error) {
-        console.error("Error fetching patient:", error);
+        console.error(
+          "Error fetching patient data, loading from cache:",
+          error
+        );
+        const cachedData = await getCachedPatients();
+        if (cachedData.length > 0) {
+          setPatients(cachedData);
+        }
       }
     };
 
@@ -55,9 +81,9 @@ const CaregiverHomePage = () => {
       console.error("Error signing out:", error);
     }
   };
+
   const handleAddPatient = () => navigate("/patient/new");
 
-  //todo: setup a protected route
   if (!user) {
     navigate("/login");
   }
