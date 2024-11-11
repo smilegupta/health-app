@@ -34,9 +34,10 @@ const PatientForm = () => {
 
   useEffect(() => {
     if (!isNew) loadPatientData();
-  }, [id, isNew]);
+  }, [id, isNew, user]);
 
   const loadPatientData = async () => {
+    if (!user) return;
     try {
       const response = await fetch(
         `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${id}?caregiverId=${user.sub}`

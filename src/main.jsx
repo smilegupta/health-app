@@ -36,7 +36,7 @@ Amplify.configure(awsconfig);
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("/service-worker.js")
+      .register("/service-worker.js", { scope: "/" })
       .then((registration) => {
         console.log(
           "Service Worker registered with scope:",
@@ -51,27 +51,26 @@ if ("serviceWorker" in navigator) {
           });
         }
 
-        const registerSync = async () => {
-          if ("sync" in registration) {
-            try {
-              await registration.sync.register("sync-pending-patients");
-              console.log("Background sync registered");
-            } catch (error) {
-              console.error("Background sync registration failed:", error);
-            }
-          }
-        };
-
         if (navigator.onLine) {
-          registerSync();
+          registration.active.postMessage({
+            type: "SYNC_PENDING_DATA",
+          });
         }
 
         window.addEventListener("online", () => {
-          registerSync();
+          registration.active.postMessage({
+            type: "SYNC_PENDING_DATA",
+          });
         });
       })
       .catch((error) =>
         console.error("Service Worker registration failed:", error)
       );
+  });
+
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data && event.data.type === "SYNC_SUCCESS") {
+      alert(event.data.message);
+    }
   });
 }

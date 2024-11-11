@@ -21,10 +21,11 @@ const CaregiverHomePage = () => {
 
   // Load patients from local storage
   useEffect(() => {
+    if (!user) return;
     const fetchPatients = async () => {
       try {
         const response = await fetch(
-          `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients?caregiverId=${user.sub}`
+          `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients?caregiverId=${user?.sub}`
         );
         const data = await response.json();
         setPatients(data);
@@ -34,7 +35,7 @@ const CaregiverHomePage = () => {
     };
 
     fetchPatients();
-  }, []);
+  }, [user]);
 
   // Load unsynced patients from IndexedDB
   useEffect(() => {
@@ -67,7 +68,7 @@ const CaregiverHomePage = () => {
       <main className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold">
-            {translate("welcome", { name: "Caregiver" })}
+            {translate("welcome", { name: user?.name })}
           </h2>
           <button
             onClick={handleLogout}

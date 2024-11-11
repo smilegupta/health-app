@@ -43,25 +43,28 @@ const deletePendingPatient = async (id) => {
 };
 
 // Sync event listener to process pending patients
-self.addEventListener("sync", async (event) => {
-  if (event.tag === "sync-pending-patients") {
-    event.waitUntil(syncPendingPatients());
+self.addEventListener("message", async (event) => {
+  if (event.data && event.data.type === "SYNC_PENDING_DATA") {
+    await syncPendingPatients();
   }
 });
 
 // Sync function to process and upload pending patients data
 const syncPendingPatients = async () => {
   const pendingPatients = await getPendingPatients();
+
+  if (!pendingPatients.length) {
+    return;
+  }
+
   try {
     for (const patientData of pendingPatients) {
-      for (const recording of patientData.audioRecordings) {
+      for (const recording of patientData.recordings) {
         if (recording.isBase64) {
+          const fileName = patientData.name.relace(" ", "-");
           try {
             // Upload the base64 audio to GitHub and update the recording URL
-            const githubFileURL = await uploadToGitHub(
-              patientData.name,
-              recording.url
-            );
+            const githubFileURL = await uploadToGitHub(fileName, recording.url);
             recording.url = githubFileURL;
             recording.isBase64 = false;
           } catch (error) {
@@ -70,12 +73,11 @@ const syncPendingPatients = async () => {
           }
         }
       }
-
       // api integration
       const url = `https://ecictj5926.execute-api.ap-south-1.amazonaws.com/dev/patients/${patientData.patientId}`;
 
-      const formattedData = { ...patientData };
-      delete formattedData.id;
+      const formattedData = JSON.parse(JSON.stringify(patientData));
+      delete formattedData.patientId;
 
       try {
         const response = await fetch(url, {
@@ -87,14 +89,21 @@ const syncPendingPatients = async () => {
         await response.json();
       } catch (error) {
         console.error("Error updating patient data:", error);
-        return;
       }
-
       // Delete from IndexedDB after syncing
       await deletePendingPatient(patientData.id);
     }
 
-    alert("Data synced successfully, refresh the page to see the changes.");
+    // Send a message to main thread to update UI
+    self.clients.matchAll().then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({
+          type: "SYNC_SUCCESS",
+          message:
+            "Data synced successfully, refresh the page to see the changes.",
+        });
+      });
+    });
   } catch (error) {
     console.error("Error syncing pending patients:", error);
   }
