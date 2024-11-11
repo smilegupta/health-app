@@ -4,6 +4,7 @@ import InputField from "./InputField";
 import RecordingControls from "./RecordingControls";
 import { blobToBase64 } from "src/utils/blobToBase64";
 import { useUser } from "src/contexts/UserContext";
+import { useLocalization } from "src/contexts/Localization";
 
 import { savePendingPatient } from "src/indexedDB";
 
@@ -11,6 +12,7 @@ const PatientForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = id === "new";
+  const { translate } = useLocalization();
 
   const [patient, setPatient] = useState({
     name: "",
@@ -58,8 +60,8 @@ const PatientForm = () => {
   const validateField = (field, value) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const errorMessages = {
-      name: "Name is required.",
-      email: "Enter a valid email address.",
+      name: translate("name_required"),
+      email: translate("valid_email"),
     };
 
     setErrors((prev) => ({
@@ -124,7 +126,7 @@ const PatientForm = () => {
       await savePatientData(isNew ? "POST" : "PUT", patientData);
     } else {
       await savePendingPatient({ ...patientData, id: generatedId });
-      alert("Data saved offline and will sync when online.");
+      alert(translate("patient_offline"));
     }
 
     navigate("/");
@@ -191,15 +193,13 @@ const PatientForm = () => {
     <div className="min-h-screen bg-gray-100 p-8 flex flex-col items-center">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
         <h2 className="text-3xl font-bold mb-6 text-center">
-          {isNew ? "Add New Patient" : "Edit Patient"}
+          {isNew ? translate("add_patient") : translate("edit_patient")}
         </h2>
         <form onSubmit={handleSubmit}>
           {["name", "email", "pastProblems"].map((field, index) => (
             <InputField
               key={index}
-              label={`Patient ${
-                field.charAt(0).toUpperCase() + field.slice(1)
-              }`}
+              label={translate(`patient_${field}`)}
               type={field === "email" ? "email" : "text"}
               value={patient[field]}
               onChange={(e) => handleInputChange(field, e.target.value)}
@@ -219,7 +219,7 @@ const PatientForm = () => {
             type="submit"
             className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition duration-200"
           >
-            Submit
+            {translate("submit")}
           </button>
         </form>
       </div>

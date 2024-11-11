@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLocalization } from "src/contexts/Localization";
 
 import InputField from "./InputField";
 import Header from "./Header";
@@ -13,13 +14,14 @@ const AddCaregiverForm = () => {
   });
   const [errors, setErrors] = useState({});
   const { user } = useUser();
+  const { translate } = useLocalization();
 
   // Validate fields
   const validateField = (field, value) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const errorMessages = {
-      name: "Name is required.",
-      email: "Enter a valid email address.",
+      name: translate("name_required"),
+      email: translate("valid_email_required"),
     };
 
     setErrors((prev) => ({
@@ -62,7 +64,6 @@ const AddCaregiverForm = () => {
         }
       );
       if (!response.ok) throw new Error("Failed to add caregiver");
-      alert("Caregiver added successfully");
       navigate("/");
     } catch (error) {
       console.error("Error adding caregiver:", error);
@@ -75,18 +76,18 @@ const AddCaregiverForm = () => {
       <div className="min-h-screen bg-gray-100 p-8 flex flex-col items-center">
         <div className="bg-white p-6 mt-6 rounded-lg shadow-lg w-full max-w-md">
           <h2 className="text-3xl font-bold mb-6 text-center">
-            Add New Caregiver
+            {translate("add_caregiver")}
           </h2>
           <form onSubmit={handleSubmit}>
             <InputField
-              label="Caregiver Name"
+              label={translate("caregiver_name")}
               type="text"
               value={caregiver.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
               error={errors.name}
             />
             <InputField
-              label="Caregiver Email"
+              label={translate("caregiver_email")}
               type="email"
               value={caregiver.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
@@ -96,7 +97,7 @@ const AddCaregiverForm = () => {
               type="submit"
               className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition duration-200 mt-4"
             >
-              Submit
+              {translate("submit")}
             </button>
           </form>
         </div>

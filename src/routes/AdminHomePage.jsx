@@ -16,10 +16,7 @@ const AdminHomePage = () => {
   const [caregivers, setCaregivers] = useState([]);
   const { user, setUser } = useUser();
 
-  // Redirect to login if not authenticated
-  if (!user) {
-    navigate("/login");
-  }
+  console.log("User:", user);
 
   // Fetch caregivers list for the facility
   useEffect(() => {
@@ -58,9 +55,7 @@ const AdminHomePage = () => {
       <Header />
       <main className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold">
-            {translate("welcome_admin")}
-          </h2>
+          <h2 className="text-3xl font-bold">{translate("welcome_admin")}</h2>
           <button
             onClick={handleLogout}
             className="flex items-center bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
@@ -73,13 +68,17 @@ const AdminHomePage = () => {
         {/* Facility Name */}
         <div className="mb-8 p-4 bg-blue-50 border border-blue-300 rounded-lg">
           <h3 className="text-xl font-semibold text-blue-800">
-            {translate("facility_name")}: {user.name || "N/A"}
+            {translate("facility_name", {
+              name: user.name || "N/A",
+            })}
           </h3>
         </div>
 
         {/* Add Caregiver Button */}
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-2xl font-semibold">{translate("caregivers_list")}</h3>
+          <h3 className="text-2xl font-semibold">
+            {translate("caregivers_list")}
+          </h3>
           <button
             onClick={handleAddCaregiver}
             className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"

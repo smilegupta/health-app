@@ -84,10 +84,6 @@ const CaregiverHomePage = () => {
 
   const handleAddPatient = () => navigate("/patient/new");
 
-  if (!user) {
-    navigate("/login");
-  }
-
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
